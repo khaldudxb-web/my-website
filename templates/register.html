@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="auth-page">
+    <div class="auth-image"
+        style="background-image: url('https://images.unsplash.com/photo-1529074563502-7c9ddf42e8ef?w=1200&q=80')"></div>
+    <div class="auth-form-side">
+        <div class="auth-form-card">
+            <h2>Create Account</h2>
+            <p class="subtitle">Join Aviation Corp and unlock your flight dashboard.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('register') }}" method="post" class="form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Create a strong password"
+                        required>
+                </div>
+                <button type="submit" class="form-submit"><i class="fas fa-user-plus"></i>&nbsp; Create Account</button>
+            </form>
+            <p class="form-footer">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="dashboard-welcome reveal">
+    <h2><i class="fas fa-cloud-arrow-up" style="margin-right:0.5rem; color:var(--accent-light);"></i> Upload Files</h2>
+    <p>Upload documents, images, and other files to Aviation Corp.</p>
+    <div class="admin-links">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Upload a File</h2>
+        <p>Allowed types: PNG, JPG, JPEG, GIF, PDF, DOC, DOCX, XLS, XLSX, CSV, TXT (max 16 MB)</p>
+        <div class="accent-line"></div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }}" style="margin-bottom: 1rem;">
+        <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="form" style="max-width: 600px;">
+        <div class="form-group">
+            <label for="file">Choose File</label>
+            <input type="file" id="file" name="file" required style="padding: 0.75rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.05); color: inherit; width: 100%;">
+        </div>
+        <button type="submit" class="form-submit"><i class="fas fa-upload"></i>&nbsp; Upload File</button>
+    </form>
+</section>
+
+{% if uploaded_files %}
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Uploaded Files</h2>
+        <p>Previously uploaded files</p>
+        <div class="accent-line"></div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>File Name</th>
+                    <th>Size</th>
+                    <th>Uploaded At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in uploaded_files %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><a href="{{ url_for('static', filename='uploads/' + file.name) }}" target="_blank" style="color: var(--accent-light);">{{ file.name }}</a></td>
+                    <td>{{ "%.2f"|format(file.size / 1024) }} KB</td>
+                    <td>{{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td style="display:flex; gap:0.5rem; align-items:center;">
+                        {% if file.name.endswith('.csv') or file.name.endswith('.xls') or file.name.endswith('.xlsx') %}
+                        <a href="{{ url_for('view_data', filename=file.name) }}" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
+                            <i class="fas fa-chart-line"></i> View Data
+                        </a>
+                        {% endif %}
+                        <form action="{{ url_for('delete_file', filename=file.name) }}" method="post" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this file? All associated data will be removed.');">
+                            <button type="submit" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; color: #ff6b6b; border-color: #ff6b6b;">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,9 +1,21 @@
-<nav>
-    <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Contact</a></li>
-        <li><a href="#">Login</a></li>
-        <li><a href="#">Register</a></li>
-    </ul>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <i class="fas fa-plane"></i> Aviation Corp
+        </a>
+        <button class="hamburger" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('contact') }}">Contact</a></li>
+            {% if session.get('username') %}
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('logout') }}" class="nav-cta"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}" class="nav-cta">Sign In</a></li>
+            {% endif %}
+        </ul>
+    </div>
 </nav>

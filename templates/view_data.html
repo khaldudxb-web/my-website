@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .chart-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1.5rem;
+    }
+    .chart-controls .filter-group {
+        min-width: 200px;
+    }
+    .chart-container {
+        width: 100%;
+        height: 450px;
+        margin-top: 1rem;
+    }
+    .data-table td, .data-table th {
+        white-space: nowrap;
+    }
+    .row-filter-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+    }
+    .row-filter-controls .filter-group {
+        min-width: 180px;
+    }
+    .table-wrapper {
+        max-height: 600px;
+        overflow: auto;
+    }
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    @media (max-width: 900px) {
+        .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 1.2rem;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .mini-stat {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        text-align: center;
+    }
+    .mini-stat .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent-light, #00b4d8);
+    }
+    .mini-stat .stat-label {
+        font-size: 0.82rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+    }
+    .full-width-chart {
+        grid-column: 1 / -1;
+    }
+    .row-filter-controls select,
+    .chart-controls select,
+    .filters select {
+        background: #1a1a2e;
+        color: #e0e0e0;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        appearance: auto;
+    }
+    .row-filter-controls select:focus,
+    .chart-controls select:focus,
+    .filters select:focus {
+        outline: none;
+        border-color: var(--accent-light, #00b4d8);
+        box-shadow: 0 0 0 2px rgba(0,180,216,0.2);
+    }
+    .row-filter-controls select option,
+    .chart-controls select option,
+    .filters select option {
+        background: #1a1a2e;
+        color: #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-welcome reveal">
+    <h2><i class="fas fa-chart-bar" style="margin-right:0.5rem; color:var(--accent-light);"></i> Data Viewer &amp; Analytics</h2>
+    <p>Viewing data from <strong>{{ filename }}</strong> &mdash; All charts update live when filters are applied.</p>
+    <div class="admin-links">
+        <a href="{{ url_for('upload') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Upload
+        </a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="flash-message flash-{{ category }}" style="margin-bottom: 1rem;">
+    <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- DATA TABLE -->
+<section class="section reveal">
+    <div class="section-header">
+        <h2>File Data</h2>
+        <p>Showing all rows and columns from the uploaded file.</p>
+        <div class="accent-line"></div>
+    </div>
+
+    {% if filter_columns %}
+    <div class="row-filter-controls filters">
+        {% for fc in filter_columns %}
+        <div class="filter-group">
+            <label for="row-filter-{{ loop.index }}">{{ fc.name }}:</label>
+            <select id="row-filter-{{ loop.index }}" class="row-filter" data-column="{{ fc.name }}">
+                <option value="">All</option>
+                {% for val in fc['values'] %}
+                <option value="{{ val }}">{{ val }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endfor %}
+        <button id="clear-row-filters" class="btn btn-secondary">Clear Filters</button>
+    </div>
+    {% endif %}
+
+    <p class="subtext">
+        Showing <span id="visible-row-count">{{ table_data|length }}</span> of {{ table_data|length }} rows
+    </p>
+
+    <div class="table-wrapper">
+        <table class="data-table" id="fileDataTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    {% for col in columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table_data %}
+                <tr class="data-row"
+                    {% for col in columns %}
+                    data-col-{{ loop.index0 }}="{{ row[col]|string|lower }}"
+                    {% endfor %}
+                >
+                    <td>{{ loop.index }}</td>
+                    {% for col in columns %}
+                    <td>{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- GRAPHICAL ANALYSIS — always shown -->
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Graphical Analysis</h2>
+        <p>Charts are built from the actual uploaded data. Apply filters above to see updated visuals.</p>
+        <div class="accent-line"></div>
+    </div>
+
+    {% if filter_columns %}
+    <div class="row-filter-controls filters" style="margin-bottom:1rem;">
+        {% for fc in filter_columns %}
+        <div class="filter-group">
+            <label for="chart-filter-{{ loop.index }}">{{ fc.name }}:</label>
+            <select id="chart-filter-{{ loop.index }}" class="chart-filter" data-column="{{ fc.name }}">
+                <option value="">All</option>
+                {% for val in fc['values'] %}
+                <option value="{{ val }}">{{ val }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endfor %}
+        <button id="clear-chart-filters" class="btn btn-secondary">Clear Filters</button>
+    </div>
+    {% endif %}
+
+    <div id="summaryStats" class="stats-row" style="margin-bottom:2rem;"></div>
+
+    <div class="charts-grid">
+        {% if date_columns %}
+        <div class="chart-card full-width-chart">
+            <div id="lineChart" class="chart-container"></div>
+        </div>
+        {% endif %}
+
+        <div class="chart-card">
+            <div id="barChart" class="chart-container"></div>
+        </div>
+
+        <div class="chart-card">
+            <div id="pieChart" class="chart-container"></div>
+        </div>
+
+        {% if date_columns %}
+        <div class="chart-card">
+            <div id="areaChart" class="chart-container"></div>
+        </div>
+        <div class="chart-card">
+            <div id="columnChart" class="chart-container"></div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.0/highcharts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.0/highcharts-3d.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.0/modules/exporting.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const allColumns = {{ columns|tojson }};
+    const numericColumns = {{ numeric_columns|tojson }};
+    const dateColumns = {{ date_columns|tojson }};
+    const rawData = {{ raw_json|safe }};
+
+    const rowFilters = document.querySelectorAll('.row-filter');
+    const chartFilters = document.querySelectorAll('.chart-filter');
+    const dataRows = Array.from(document.querySelectorAll('.data-row'));
+    const visibleRowCount = document.getElementById('visible-row-count');
+    const clearRowBtn = document.getElementById('clear-row-filters');
+    const clearChartBtn = document.getElementById('clear-chart-filters');
+
+    // Sync filters: when one set changes, update the matching dropdown in the other set
+    function syncFilters(source, targetList) {
+        const col = source.dataset.column;
+        targetList.forEach(sel => {
+            if (sel.dataset.column === col) sel.value = source.value;
+        });
+    }
+
+    function getActiveFilters() {
+        const filters = {};
+        // Read from both filter sets for robustness
+        rowFilters.forEach(sel => {
+            if (sel.value) filters[sel.dataset.column] = sel.value;
+        });
+        chartFilters.forEach(sel => {
+            if (sel.value) filters[sel.dataset.column] = sel.value;
+        });
+        return filters;
+    }
+
+    function getFilteredData() {
+        const filters = getActiveFilters();
+        return rawData.filter(row => {
+            for (const [col, val] of Object.entries(filters)) {
+                if (String(row[col]).toLowerCase() !== val.toLowerCase()) return false;
+            }
+            return true;
+        });
+    }
+
+    function applyRowFilters() {
+        const filters = getActiveFilters();
+        let shown = 0;
+        const activeFilters = [];
+        for (const [colName, val] of Object.entries(filters)) {
+            const colIdx = allColumns.indexOf(colName);
+            if (colIdx >= 0) activeFilters.push({ colIdx, value: val.toLowerCase() });
+        }
+        dataRows.forEach(row => {
+            let visible = true;
+            for (const f of activeFilters) {
+                if ((row.getAttribute('data-col-' + f.colIdx) || '') !== f.value) { visible = false; break; }
+            }
+            row.style.display = visible ? '' : 'none';
+            if (visible) shown++;
+        });
+        if (visibleRowCount) visibleRowCount.textContent = shown;
+        renderAllCharts();
+    }
+
+    rowFilters.forEach(sel => sel.addEventListener('change', () => {
+        syncFilters(sel, chartFilters);
+        applyRowFilters();
+    }));
+    chartFilters.forEach(sel => sel.addEventListener('change', () => {
+        syncFilters(sel, rowFilters);
+        applyRowFilters();
+    }));
+    if (clearRowBtn) {
+        clearRowBtn.addEventListener('click', () => {
+            rowFilters.forEach(sel => sel.value = '');
+            chartFilters.forEach(sel => sel.value = '');
+            applyRowFilters();
+        });
+    }
+    if (clearChartBtn) {
+        clearChartBtn.addEventListener('click', () => {
+            rowFilters.forEach(sel => sel.value = '');
+            chartFilters.forEach(sel => sel.value = '');
+            applyRowFilters();
+        });
+    }
+
+    function getSelectedNumeric() {
+        return null; // default to row-count based charts; all data
+    }
+    function getSelectedDate() {
+        // Prefer FINAL SERVICE DATE if available, otherwise last date column
+        const preferred = dateColumns.find(c => c.toUpperCase().includes('FINAL'));
+        if (preferred) return preferred;
+        return dateColumns.length ? dateColumns[dateColumns.length - 1] : null;
+    }
+    function getSelectedCategory() {
+        const catCols = allColumns.filter(c => !numericColumns.includes(c) && !dateColumns.includes(c));
+        return catCols.length ? catCols[0] : null;
+    }
+    function fmt(n) { return n.toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+
+    function parseMonth(dateStr) {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        if (isNaN(d)) return null;
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+
+    // Summary Stats
+    function renderSummaryStats(data) {
+        const container = document.getElementById('summaryStats');
+        if (!container) return;
+        let html = '<div class="mini-stat"><div class="stat-value">'+fmt(data.length)+'</div><div class="stat-label">Total Rows</div></div>';
+        numericColumns.forEach(nc => {
+            const vals = data.map(r => parseFloat(r[nc])).filter(v => !isNaN(v));
+            if (vals.length) {
+                const sum = vals.reduce((a, b) => a + b, 0);
+                const avg = sum / vals.length;
+                html += '<div class="mini-stat"><div class="stat-value">'+fmt(sum)+'</div><div class="stat-label">Total '+nc+'</div></div>';
+                html += '<div class="mini-stat"><div class="stat-value">'+fmt(avg)+'</div><div class="stat-label">Avg '+nc+'</div></div>';
+            }
+        });
+        container.innerHTML = html;
+    }
+
+    // Monthly Line Chart (date + numeric or date + count)
+    function renderLineChart(data) {
+        const el = document.getElementById('lineChart');
+        if (!el) return;
+        const dc = getSelectedDate();
+        if (!dc) return;
+        const nc = getSelectedNumeric();
+        const monthly = {};
+        data.forEach(row => {
+            const m = parseMonth(row[dc]);
+            if (!m) return;
+            if (nc) {
+                const v = parseFloat(row[nc]);
+                if (!isNaN(v)) monthly[m] = (monthly[m] || 0) + v;
+            } else {
+                monthly[m] = (monthly[m] || 0) + 1;
+            }
+        });
+        const labels = Object.keys(monthly).sort();
+        const values = labels.map(l => monthly[l]);
+        const title = nc ? (nc + ' — Monthly Trend') : 'Row Count — Monthly Trend';
+        const yTitle = nc || 'Count';
+        Highcharts.chart(el, {
+            chart: { type: 'line' },
+            title: { text: title },
+            xAxis: { categories: labels, title: { text: 'Month' }, labels: { rotation: -45 } },
+            yAxis: { title: { text: yTitle } },
+            tooltip: { pointFormat: yTitle + ': <b>{point.y:,.2f}</b>' },
+            legend: { enabled: false },
+            series: [{ name: yTitle, data: values, color: '#00b4d8', marker: { radius: 4 } }],
+            plotOptions: { line: { dataLabels: { enabled: true, format: '{y:,.0f}' } } }
+        });
+    }
+
+    // Bar Chart: by selected category
+    function renderBarChart(data) {
+        const el = document.getElementById('barChart');
+        if (!el) return;
+        const catCol = getSelectedCategory();
+        if (!catCol) return;
+        const nc = getSelectedNumeric();
+        const groups = {};
+        data.forEach(row => {
+            const cat = String(row[catCol] || 'N/A');
+            if (nc) {
+                const v = parseFloat(row[nc]);
+                if (!isNaN(v)) groups[cat] = (groups[cat] || 0) + v;
+            } else {
+                groups[cat] = (groups[cat] || 0) + 1;
+            }
+        });
+        const sorted = Object.entries(groups).sort((a, b) => b[1] - a[1]).slice(0, 20);
+        const title = nc ? (nc + ' by ' + catCol) : ('Count by ' + catCol);
+        const yTitle = nc || 'Count';
+        Highcharts.chart(el, {
+            chart: { type: 'bar' },
+            title: { text: title },
+            xAxis: { categories: sorted.map(s => s[0]), title: { text: catCol } },
+            yAxis: { title: { text: yTitle } },
+            tooltip: { pointFormat: yTitle + ': <b>{point.y:,.2f}</b>' },
+            legend: { enabled: false },
+            series: [{ name: yTitle, data: sorted.map(s => s[1]), colorByPoint: true }]
+        });
+    }
+
+    // Pie Chart: distribution by category
+    function renderPieChart(data) {
+        const el = document.getElementById('pieChart');
+        if (!el) return;
+        const catCol = getSelectedCategory();
+        if (!catCol) return;
+        const counts = {};
+        data.forEach(row => {
+            const cat = String(row[catCol] || 'N/A');
+            counts[cat] = (counts[cat] || 0) + 1;
+        });
+        const pieData = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 20)
+            .map(([name, y]) => ({ name, y }));
+        Highcharts.chart(el, {
+            chart: { type: 'pie', options3d: { enabled: true, alpha: 45 } },
+            title: { text: 'Distribution by ' + catCol },
+            tooltip: { pointFormat: '<b>{point.y}</b> rows ({point.percentage:.1f}%)' },
+            plotOptions: { pie: { depth: 35, allowPointSelect: true, cursor: 'pointer', dataLabels: { enabled: true, format: '{point.name}: {point.y}' }, showInLegend: true } },
+            series: [{ name: 'Count', colorByPoint: true, data: pieData }]
+        });
+    }
+
+    // Area Chart: cumulative
+    function renderAreaChart(data) {
+        const el = document.getElementById('areaChart');
+        if (!el) return;
+        const dc = getSelectedDate();
+        if (!dc) return;
+        const nc = getSelectedNumeric();
+        const monthly = {};
+        data.forEach(row => {
+            const m = parseMonth(row[dc]);
+            if (!m) return;
+            if (nc) {
+                const v = parseFloat(row[nc]);
+                if (!isNaN(v)) monthly[m] = (monthly[m] || 0) + v;
+            } else {
+                monthly[m] = (monthly[m] || 0) + 1;
+            }
+        });
+        const labels = Object.keys(monthly).sort();
+        let cum = 0;
+        const values = labels.map(l => { cum += monthly[l]; return cum; });
+        const yTitle = nc ? ('Cumulative ' + nc) : 'Cumulative Count';
+        Highcharts.chart(el, {
+            chart: { type: 'area' },
+            title: { text: yTitle },
+            xAxis: { categories: labels, labels: { rotation: -45 } },
+            yAxis: { title: { text: yTitle } },
+            tooltip: { pointFormat: yTitle + ': <b>{point.y:,.2f}</b>' },
+            legend: { enabled: false },
+            series: [{ name: yTitle, data: values, color: '#48cae4', fillOpacity: 0.3 }]
+        });
+    }
+
+    // Column Chart: monthly average or count
+    function renderColumnChart(data) {
+        const el = document.getElementById('columnChart');
+        if (!el) return;
+        const dc = getSelectedDate();
+        if (!dc) return;
+        const nc = getSelectedNumeric();
+        const sums = {}, cnts = {};
+        data.forEach(row => {
+            const m = parseMonth(row[dc]);
+            if (!m) return;
+            if (nc) {
+                const v = parseFloat(row[nc]);
+                if (!isNaN(v)) { sums[m] = (sums[m] || 0) + v; cnts[m] = (cnts[m] || 0) + 1; }
+            } else {
+                sums[m] = (sums[m] || 0) + 1; cnts[m] = (cnts[m] || 0) + 1;
+            }
+        });
+        const labels = Object.keys(sums).sort();
+        const values = nc ? labels.map(l => sums[l] / cnts[l]) : labels.map(l => sums[l]);
+        const title = nc ? (nc + ' — Monthly Avg') : 'Monthly Count';
+        const yTitle = nc ? ('Avg ' + nc) : 'Count';
+        Highcharts.chart(el, {
+            chart: { type: 'column' },
+            title: { text: title },
+            xAxis: { categories: labels, labels: { rotation: -45 } },
+            yAxis: { title: { text: yTitle } },
+            tooltip: { pointFormat: yTitle + ': <b>{point.y:,.2f}</b>' },
+            legend: { enabled: false },
+            plotOptions: { column: { dataLabels: { enabled: true, format: '{y:,.0f}' } } },
+            series: [{ name: yTitle, data: values, color: '#0096c7' }]
+        });
+    }
+
+    function renderAllCharts() {
+        const data = getFilteredData();
+        renderSummaryStats(data);
+        renderLineChart(data);
+        renderBarChart(data);
+        renderPieChart(data);
+        renderAreaChart(data);
+        renderColumnChart(data);
+    }
+
+    renderAllCharts();
+});
+</script>
+
+{% endblock %}

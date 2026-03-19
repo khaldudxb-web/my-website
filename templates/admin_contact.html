@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section">
+    <h2>Admin - Contact Messages</h2>
+    <p>Manage incoming contact form submissions.</p>
+
+    {% if messages %}
+        <div class="messages-list">
+            {% for msg in messages %}
+            <div class="message-card {{ 'unread' if msg.status == 'unread' else '' }}">
+                <div class="message-header">
+                    <h3>{{ msg.name }} <span class="email">({{ msg.email }})</span></h3>
+                    <span class="timestamp">{{ msg.submitted_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                <div class="message-content">
+                    <p>{{ msg.message }}</p>
+                </div>
+                <div class="message-meta">
+                    <small>IP: {{ msg.ip_address }} | Status: {{ msg.status }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No contact messages yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

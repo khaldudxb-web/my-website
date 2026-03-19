@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-welcome reveal">
+    <h2><i class="fas fa-gauge-high" style="margin-right:0.5rem; color:var(--accent-light);"></i> Your Dashboard</h2>
+    <p>Welcome back, <strong>{{ username }}</strong>! Here's an overview of your aviation activity.</p>
+    <div class="admin-links">
+        <a href="{{ url_for('admin_contact_messages') }}" class="btn btn-outline">
+            <i class="fas fa-envelope"></i> View Contact Messages
+        </a>
+        <a href="{{ url_for('upload') }}" class="btn btn-outline">
+            <i class="fas fa-upload"></i> Upload
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid reveal">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-plane-departure"></i></div>
+        <div class="stat-number">142</div>
+        <div class="stat-label">Total Flights</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-number">1,280</div>
+        <div class="stat-label">Hours Logged</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-earth-americas"></i></div>
+        <div class="stat-number">37</div>
+        <div class="stat-label">Destinations</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-star"></i></div>
+        <div class="stat-number">99.8%</div>
+        <div class="stat-label">Safety Rating</div>
+    </div>
+</div>
+
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Team Directory</h2>
+        <p>Employee list maintained in MongoDB. Shown only after successful login.</p>
+        <div class="accent-line"></div>
+    </div>
+
+    <p class="subtext">
+        Showing <span id="visible-count">{{ employees|length }}</span> of
+        <span id="total-count">{{ employees|length }}</span> employees
+    </p>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label for="name-filter">Search by Name:</label>
+            <input type="text" id="name-filter" placeholder="Enter employee name...">
+        </div>
+        <div class="filter-group">
+            <label for="designation-filter">Filter by Designation:</label>
+            <select id="designation-filter">
+                <option value="">All Designations</option>
+                <option value="Pilot">Pilot</option>
+                <option value="Co-Pilot">Co-Pilot</option>
+                <option value="Flight Attendant">Flight Attendant</option>
+                <option value="Maintenance Engineer">Maintenance Engineer</option>
+                <option value="Operations Manager">Operations Manager</option>
+                <option value="Ground Support">Ground Support</option>
+                <option value="Air Traffic Controller">Air Traffic Controller</option>
+                <option value="Avionics Technician">Avionics Technician</option>
+                <option value="Safety Officer">Safety Officer</option>
+                <option value="Flight Dispatcher">Flight Dispatcher</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="gender-filter">Filter by Gender:</label>
+            <select id="gender-filter">
+                <option value="">All Genders</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <button id="clear-filters" class="btn btn-secondary">Clear Filters</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Employee Name</th>
+                    <th>Designation</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th>Date of Joining</th>
+                    <th>Employee Tenure</th>
+                </tr>
+            </thead>
+            <tbody id="employee-table-body">
+                {% if employees %}
+                    {% for emp in employees %}
+                    <tr class="employee-row"
+                        data-name="{{ emp.name|lower }}"
+                        data-designation="{{ emp.designation|lower }}"
+                        data-gender="{{ emp.gender|lower }}"
+                        data-age="{{ emp.age }}"
+                        data-tenure-months="{{ emp.tenure_months }}"
+                        data-year-joined="{{ emp.year_joined }}">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ emp.name }}</td>
+                        <td>{{ emp.designation }}</td>
+                        <td>{{ emp.gender }}</td>
+                        <td>{{ emp.age }}</td>
+                        <td>{{ emp.date_of_joining.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ emp.tenure }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="no-match-row" style="display:none;">
+                        <td colspan="7" style="text-align:center; padding: 2rem;">
+                            No employees match the current filters.
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding: 2rem;">
+                            No employee records found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Recent Activity</h2>
+        <p>Your most recent flight operations and upcoming scheduled services.</p>
+        <div class="accent-line"></div>
+    </div>
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-icon"><i class="fas fa-plane-arrival"></i></div>
+            <h3>DXB → LHR</h3>
+            <p>Completed on schedule. Aircraft: Boeing 787 Dreamliner. Duration: 7h 15m.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fas fa-plane-departure"></i></div>
+            <h3>LHR → JFK</h3>
+            <p>Scheduled for next week. Aircraft: Airbus A350. Estimated duration: 8h 30m.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fas fa-tools"></i></div>
+            <h3>Maintenance Check</h3>
+            <p>Routine C-check completed on A320neo. All systems nominal — cleared for service.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section reveal">
+    <div class="section-header">
+        <h2>Employee Data Visualization</h2>
+        <p>3D Pie Chart showing employee distribution by designation</p>
+        <div class="accent-line"></div>
+    </div>
+    <div id="employee3dChart" style="width:100%; height:500px;"></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.0/highcharts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.0/highcharts-3d.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const nameFilter = document.getElementById('name-filter');
+    const designationFilter = document.getElementById('designation-filter');
+    const genderFilter = document.getElementById('gender-filter');
+    const clearBtn = document.getElementById('clear-filters');
+    const rows = Array.from(document.querySelectorAll('.employee-row'));
+    const noMatchRow = document.getElementById('no-match-row');
+    const visibleCount = document.getElementById('visible-count');
+
+    if (!rows.length) return;
+
+    const normalize = (v) => (v || '').toString().trim().toLowerCase();
+
+    function getVisibleRows() {
+        return rows.filter(row => row.style.display !== 'none');
+    }
+
+    function render3DChart() {
+        const visible = getVisibleRows();
+        const counts = {};
+
+        visible.forEach(row => {
+            const designation = row.querySelectorAll('td')[2].textContent.trim();
+            counts[designation] = (counts[designation] || 0) + 1;
+        });
+
+        const pieData = Object.entries(counts).map(([name, y]) => ({ name, y }));
+
+        Highcharts.chart('employee3dChart', {
+            chart: {
+                type: 'pie',
+                options3d: {
+                    enabled: true,
+                    alpha: 45,
+                    beta: 0
+                }
+            },
+            title: {
+                text: 'Employees by Designation'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b> employees ({point.percentage:.1f}%)'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    depth: 45,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.name}: {point.y}'
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Employees',
+                colorByPoint: true,
+                data: pieData
+            }]
+        });
+    }
+
+    function applyFilters() {
+        const nameValue = normalize(nameFilter.value);
+        const designationValue = normalize(designationFilter.value);
+        const genderValue = normalize(genderFilter.value);
+
+        let shown = 0;
+
+        rows.forEach((row) => {
+            const name = row.dataset.name;
+            const designation = row.dataset.designation;
+            const gender = row.dataset.gender;
+
+            const matchName = !nameValue || name.includes(nameValue);
+            const matchDesignation = !designationValue || designation === designationValue;
+            const matchGender = !genderValue || gender === genderValue;
+
+            const isVisible = matchName && matchDesignation && matchGender;
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) shown++;
+        });
+
+        if (visibleCount) visibleCount.textContent = shown;
+        if (noMatchRow) noMatchRow.style.display = shown === 0 ? '' : 'none';
+
+        render3DChart();
+    }
+
+    nameFilter.addEventListener('input', applyFilters);
+    designationFilter.addEventListener('change', applyFilters);
+    genderFilter.addEventListener('change', applyFilters);
+
+    clearBtn.addEventListener('click', () => {
+        nameFilter.value = '';
+        designationFilter.value = '';
+        genderFilter.value = '';
+        applyFilters();
+    });
+
+    applyFilters();
+});
+</script>
+
+{% endblock %}

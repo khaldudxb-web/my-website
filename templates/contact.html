@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero hero-sub">
+    <div class="hero-bg"
+        style="background-image: url('https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1920&q=80')"></div>
+    <div class="hero-content">
+        <h1>Get in Touch</h1>
+        <p>Have a question or need a quote? We'd love to hear from you.</p>
+    </div>
+</section>
+
+<!-- Contact Split -->
+<div class="contact-wrapper reveal" style="padding-top:5rem; padding-bottom:5rem;">
+    <div class="contact-info">
+        <h2>Contact Us</h2>
+        <p>Reach out through any of the channels below, or fill in the form and our team will respond within 24 hours.
+        </p>
+        <div class="contact-detail">
+            <div class="contact-detail-icon"><i class="fas fa-location-dot"></i></div>
+            <div>
+                <strong>Headquarters</strong>
+                <span>Burjuman,Dubai, UAE</span>
+            </div>
+        </div>
+        <div class="contact-detail">
+            <div class="contact-detail-icon"><i class="fas fa-envelope"></i></div>
+            <div>
+                <strong>Email</strong>
+                <span>khaldudxb@gmail.com</span>
+            </div>
+        </div>
+        <div class="contact-detail">
+            <div class="contact-detail-icon"><i class="fas fa-phone"></i></div>
+            <div>
+                <strong>Phone</strong>
+                <span>+971 50 5642604</span>
+            </div>
+        </div>
+        <div class="contact-detail">
+            <div class="contact-detail-icon"><i class="fas fa-clock"></i></div>
+            <div>
+                <strong>Hours</strong>
+                <span>24/7 — 365 days a year</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="contact-form-card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('contact') }}" method="post" class="form">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Tell us how we can help..." rows="5"
+                    required></textarea>
+            </div>
+            <button type="submit" class="form-submit"><i class="fas fa-paper-plane"></i>&nbsp; Send Message</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

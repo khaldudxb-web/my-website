@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-bg"
+        style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=1920&q=80')"></div>
+    <div class="hero-content">
+        <h1>Elevate Your Journey with Aviation Corp</h1>
+        <p>World-class air transport, private charters, and aerospace solutions — built on two decades of uncompromising
+            safety and innovation.</p>
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="{{ url_for('about') }}" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Discover More</a>
+            <a href="{{ url_for('contact') }}" class="btn btn-outline"><i class="fas fa-envelope"></i> Get in Touch</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline"><i class="fas fa-user-plus"></i> Register</a>
+            <a href="{{ url_for('login_as_admin') }}" class="btn btn-primary"><i class="fas fa-user-shield"></i> Login as Admin</a>
+        </div>
+    </div>
+</section>
+
+<!-- Services -->
+<div class="section-dark">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <h2>Our Core Services</h2>
+            <p>From global cargo logistics to bespoke private jet charters, we deliver excellence at every altitude.</p>
+            <div class="accent-line"></div>
+        </div>
+        <div class="cards-grid reveal">
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-boxes-packing"></i></div>
+                <h3>Cargo Transport</h3>
+                <p>Reliable worldwide freight solutions with real-time tracking, temperature-controlled holds, and
+                    guaranteed delivery windows.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-jet-fighter-up"></i></div>
+                <h3>Private Jets</h3>
+                <p>Experience luxury travel with our modern fleet of executive aircraft, offering bespoke itineraries
+                    and VIP concierge services.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-wrench"></i></div>
+                <h3>Aircraft Maintenance</h3>
+                <p>FAA-certified MRO services covering inspections, engine overhauls, avionics upgrades, and 24/7 AOG
+                    support.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Why Choose Us -->
+<section class="section">
+    <div class="section-header reveal">
+        <h2>Why Choose Us?</h2>
+        <p>Trusted by airlines, corporations, and governments across six continents.</p>
+        <div class="accent-line"></div>
+    </div>
+    <div class="features-grid reveal">
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-globe"></i></div>
+            <div>
+                <h4>24/7 Global Operations</h4>
+                <p>Round-the-clock dispatch and operations centers spanning every time zone.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <h4>FAA-Approved Safety</h4>
+                <p>Industry-leading safety programs with zero incident rate over the past 5 years.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+            <div>
+                <h4>Eco-Friendly Fleet</h4>
+                <p>Modern, fuel-efficient aircraft reducing carbon footprint by 40% compared to industry average.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-trophy"></i></div>
+            <div>
+                <h4>Award-Winning Service</h4>
+                <p>Recognized by Skytrax and industry bodies for outstanding customer satisfaction.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Latest News -->
+<div class="section-dark">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <h2>Latest News</h2>
+            <p>Stay updated with our most recent developments and achievements.</p>
+            <div class="accent-line"></div>
+        </div>
+        <div class="news-card reveal">
+            <img src="https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=600&q=80"
+                alt="Modern aircraft on runway">
+            <div class="news-card-body">
+                <span class="tag">Expansion</span>
+                <h3>Aviation Corp Expands into Asia-Pacific Market</h3>
+                <p>We're thrilled to announce new routes connecting major hubs across Asia-Pacific, along with our
+                    acquisition of next-generation eco-friendly aircraft that enhance both capacity and sustainability.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
